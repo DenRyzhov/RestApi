@@ -1,49 +1,55 @@
 package com.example.restapi.Controller;
 
 import com.example.restapi.entity.Cat;
+import com.example.restapi.repository.CatRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.flogger.Flogger;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.w3c.dom.stylesheets.LinkStyle;
 
 import javax.xml.transform.sax.SAXResult;
+import java.util.List;
 
+@Slf4j
 @RestController
+@RequiredArgsConstructor
 public class MainController {
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final CatRepository catRepository;
+    private final ObjectMapper objectMapper;
 
-    @GetMapping("/api/main")
-    public String mainListener() {
-        return "Hello world";
+
+    @PostMapping("/api/add")
+    public void addCat(@RequestBody Cat cat) {
+        log.info("New row :" + catRepository.save(cat));
     }
 
-    @GetMapping("api/cat")
-    public String fiveCat() {
-        Cat cat = new Cat("Barsik", 5, 10);
-        String jsonData = null;
-        try {
-            jsonData = objectMapper.writeValueAsString(cat);
-        } catch (JsonProcessingException e) {
-            System.out.println("Error with cat");
-        }
-        return jsonData;
+    @SneakyThrows
+    @GetMapping("/api/all")
+    public List<Cat> getAll () {
+        return catRepository.findAll();
     }
 
-    @PostMapping("/api/special")
-    public String giveSpecialCat(@RequestParam String name ){
-            Cat cat = new Cat(name, 5, 10);
-        String jsonData = null;
-        try {
-            jsonData = objectMapper.writeValueAsString(cat);
-        } catch (JsonProcessingException e) {
-            System.out.println("Error with cat");
+    @GetMapping("/api")
+    public Cat getCat(@RequestParam int id) {
+        return catRepository.findById(id).orElseThrow();
+    }
+
+    @DeleteMapping("/api")
+    public void deleteCat(@RequestParam int id) {
+        catRepository.deleteById(id);
+    }
+
+    @PutMapping("/api/put")
+    public String changeCat(@RequestBody Cat cat) {
+        if (!catRepository.existsById(cat.getId())){
+            return "No such row";
         }
-        return jsonData;
+       return catRepository.save(cat).toString();
     }
 }
